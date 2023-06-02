@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\EmpleadoRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: EmpleadoRepository::class)]
 class Empleado
@@ -23,6 +24,7 @@ class Empleado
     private ?int $edad = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\Email(message: 'El correo {{ value }} no es válido.',)]
     private ?string $correo = null;
 
     #[ORM\Column(length: 15)]

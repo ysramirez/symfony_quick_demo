@@ -3,9 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Empleado;
+use App\Form\CuestionarioType;
 use App\Form\EmpleadoType;
+use App\Recursos\Cuestionario;
 use App\Repository\EmpleadoRepository;
 use App\Services\PasswordGenerator;
+use App\Services\SaveToFile;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -82,5 +85,32 @@ class EmpleadoController extends AbstractController
     public function getPassword(PasswordGenerator $passwordGenerator, int $lenght): Response
     {
         return new Response($passwordGenerator->generatePassword($lenght));
+    }
+
+    #[Route('/pregunta/cuestionario', name: 'app_empleado_cuestionario')]
+    public function cuestionario(): Response
+    {
+        $formCuestionario = $this->createForm(CuestionarioType::class, new Cuestionario(), [
+            'action' => $this->generateUrl('app_empleado_enviar_cuestionario'),
+            'method' => 'POST',
+        ]);
+
+        return $this->renderForm('empleado/cuestionario.html.twig', [
+            'form' => $formCuestionario,
+        ]);
+    }
+
+    #[Route('/pregunta/enviar', name: 'app_empleado_enviar_cuestionario')]
+    public function recibirCuestionario(Request $request, SaveToFile $saveToFile): Response
+    {
+        $form =  $this->createForm(CuestionarioType::class, $cuestionario = new Cuestionario());
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $saveToFile->setString($cuestionario->getOficina()."\n".$cuestionario->getPregunta());
+            $saveToFile->save();
+            return new Response('Se guardó la pregunta en el archivo '.$saveToFile->getFileName());
+        }
+        return new Response('no valido');
     }
 }
